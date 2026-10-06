@@ -59,8 +59,16 @@ with tempfile.TemporaryDirectory(prefix='webpantau-api-') as directory:
             status, created = call('/services', 'POST', row)
             assert status == 201
             assert created['website'] == 'https://example.com'
+            assert created['clientContact'] == ''  # Old records/clients need no migration.
+            row['clientContact'] = 'WhatsApp: +62 812-0000-0000 / owner@example.test'
+            assert call('/services', 'POST', dict(row, clientContact='x' * 201))[0] == 400
+            assert call('/services', 'POST', dict(row, clientContact=['invalid']))[0] == 400
             assert call('/services/' + created['id'], 'PUT', dict(row, expires='2028-04-20'))[0] == 200
-            assert call('/services')[1][0]['expires'] == '2028-04-20'
+            saved_row = call('/services')[1][0]
+            assert saved_row['expires'] == '2028-04-20'
+            assert saved_row['clientContact'] == row['clientContact']
+            assert call('/services/' + created['id'], 'PUT', dict(row, clientContact=''))[0] == 200
+            assert call('/services')[1][0]['clientContact'] == ''
             assert call('/services', 'POST', row, False)[0] == 403
             assert call('/telegram', 'PUT', {'chatId': '123', 'enabled': True, 'days': [7]})[0] == 400
             dummy = '123456:abcdefghijklmnopqrstuvwxyz'

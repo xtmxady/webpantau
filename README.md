@@ -47,7 +47,7 @@ Jika site sudah aktif, cukup jalankan baris pemeriksaan dan reload. Pastikan DNS
 
 ## 4. Buka dashboard dan buat akun
 
-Buka domain Webpantau, buat nama pengguna dan kata sandi, lalu tambahkan domain/server kamu. Tidak ada akun bawaan. Selesaikan pendaftaran lewat akses privat sebelum membuka site ke publik. Jika site harus terbuka lebih dulu, gunakan `SETUP_KEY` sesuai [panduan teknis](docs/TECHNICAL.md).
+Buka domain Webpantau, buat nama pengguna dan kata sandi, lalu tambahkan domain/server kamu. Kontak klien bisa diisi dengan nomor WhatsApp, telepon, atau email pada formulir layanan; kolom ini opsional. Untuk layanan lama, klik edit lalu tambahkan kontaknya. Tidak ada akun bawaan. Selesaikan pendaftaran lewat akses privat sebelum membuka site ke publik. Jika site harus terbuka lebih dulu, gunakan `SETUP_KEY` sesuai [panduan teknis](docs/TECHNICAL.md).
 
 Menu **Telegram** menyediakan kolom token bot dan chat ID. Kirim `/start` ke botmu, isi pengaturan di dashboard, lalu klik **Simpan pengaturan → Uji pengiriman**. PHP memerlukan ekstensi cURL untuk fitur Telegram; periksa dengan `php8.3 -m`. Jika cURL belum tersedia, pasang `php8.3-curl` dan restart PHP-FPM.
 

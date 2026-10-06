@@ -28,3 +28,5 @@ button:focus-visible, a:focus-visible { outline: 2px solid #176451; }
 @media (max-width: 767px) { .mobile-menu { display: block; } .topbar-date { display: none; } }
 .main-wrap { min-width: 0; }
 .list-panel .overflow-x-auto { position: relative; }
+
+.service-contact { display: block; margin-top: 4px; color: #687563; max-width: 230px; white-space: normal; overflow-wrap: anywhere; }

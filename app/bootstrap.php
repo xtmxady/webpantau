@@ -111,11 +111,14 @@ function start_session(): void
 function validate_service(array $body): array
 {
     $service = [];
-    foreach (['name', 'client', 'website', 'provider', 'type', 'cycle', 'expires', 'cost', 'notes'] as $key) {
+    foreach (['name', 'client', 'clientContact', 'website', 'provider', 'type', 'cycle', 'expires', 'cost', 'notes'] as $key) {
         $service[$key] = is_string($body[$key] ?? null) ? trim($body[$key]) : '';
         if (strlen($service[$key]) > 2000) {
             throw new InvalidArgumentException('Isian terlalu panjang.');
         }
+    }
+    if (!is_string($body['clientContact'] ?? '') || strlen($service['clientContact']) > 200) {
+        throw new InvalidArgumentException('Kontak klien maksimal 200 karakter.');
     }
     $date = DateTimeImmutable::createFromFormat('!Y-m-d', $service['expires']);
     if ($service['name'] === '' || $service['client'] === '' || strlen($service['name']) > 120
