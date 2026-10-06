@@ -1,0 +1,4 @@
+# Install with: sudo crontab -u www-data -e
+# The cron user must be the same user owning the data directory.
+# Check every hour at minute 5; do not call the reminder script over HTTP.
+5 * * * * DATA_DIR=/var/www/webpantau/data TZ=Asia/Makassar /usr/bin/php /var/www/webpantau/bin/reminders.php >> /var/www/webpantau/data/reminders.log 2>&1

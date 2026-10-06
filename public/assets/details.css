@@ -1,0 +1,30 @@
+/* Small rules for the framework-free frontend. Tailwind and dashboard styles are in app.css. */
+.loading { min-height: 100vh; display: grid; place-items: center; color: #777b76; }
+.icon { display: inline-block; width: 18px; height: 18px; flex-shrink: 0; vertical-align: middle; }
+.logo .icon { width: 22px; height: 22px; }
+.toast button { margin-left: auto; }
+.inline-error { color: #a23e32; font-size: 12px; margin-bottom: 14px; }
+.login-form .section-icon { margin-bottom: 24px; }
+.login-form .btn { width: 100%; }
+.login-form .field-hint { margin-top: 18px; font-size: 11px; color: #858a80; }
+.field-hint { font-size: 11px; line-height: 1.7; color: #858a80; margin: -6px 0 18px; }
+.stats-grid .stat-heading, .row-flex { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.service-cell { display: flex; align-items: center; gap: 12px; }
+.service-client { display: block; margin-top: 4px; color: #777b76; }
+.service-provider { display: block; color: #777b76; }
+.attention-body { flex: 1; }
+.list-footer .saved { display: flex; align-items: center; gap: 7px; }
+.saved .dot { color: #176451; }
+.actions { display: flex; gap: 5px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.form-actions.start { justify-content: flex-start; }
+.day-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.day-chip input { accent-color: #176451; }
+.mobile-menu { display: none; }
+.privacy-note { align-items: flex-start; }
+.logout .icon { width: 16px; }
+.guide-step a { color: #176451; text-decoration: underline; }
+button:focus-visible, a:focus-visible { outline: 2px solid #176451; }
+@media (max-width: 767px) { .mobile-menu { display: block; } .topbar-date { display: none; } }
+.main-wrap { min-width: 0; }
+.list-panel .overflow-x-auto { position: relative; }
