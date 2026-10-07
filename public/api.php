@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/telegram.php';
+require_once dirname(__DIR__) . '/app/backup.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -28,8 +29,9 @@ try {
         if (!hash_equals($_SESSION['csrf'], $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) {
             respond(['error' => 'Sesi formulir kedaluwarsa. Muat ulang halaman.'], 403);
         }
-        $raw = file_get_contents('php://input', false, null, 0, 32769);
-        if (strlen($raw) > 32768) {
+        $limit = $path === '/api/backup/validate' && $method === 'POST' ? BACKUP_REQUEST_BYTES : 32768;
+        $raw = file_get_contents('php://input', false, null, 0, $limit + 1);
+        if (strlen($raw) > $limit) {
             respond(['error' => 'Permintaan terlalu besar.'], 413);
         }
         $body = json_decode($raw ?: '{}', true, 32, JSON_THROW_ON_ERROR);
@@ -112,6 +114,27 @@ try {
     if (!$authenticated) {
         respond(['error' => 'Silakan masuk kembali.'], 401);
     }
+    if ($path === '/api/backup/export' && $method === 'GET') {
+        $includeTelegram = $_GET['includeTelegram'] ?? '0';
+        if (!is_string($includeTelegram) || !in_array($includeTelegram, ['0', '1'], true)) {
+            throw new InvalidArgumentException('Pilihan backup Telegram tidak valid.');
+        }
+        $backup = with_store(static fn(array $store): array => make_backup($store, $includeTelegram === '1'));
+        header('Content-Disposition: attachment; filename="webpantau-backup-' . gmdate('Ymd-His') . '.json"');
+        echo backup_json($backup);
+        exit;
+    }
+    if ($path === '/api/backup/validate' && $method === 'POST') {
+        $request = backup_object(json_decode($raw, false, 32, JSON_THROW_ON_ERROR), ['backup']);
+        respond(stage_backup($request['backup'], session_id()));
+    }
+    if ($path === '/api/backup/import' && $method === 'POST') {
+        $request = backup_object(json_decode($raw, false, 32, JSON_THROW_ON_ERROR), ['importId', 'confirm']);
+        if (!is_string($request['importId']) || $request['confirm'] !== true) {
+            throw new InvalidArgumentException('Konfirmasi penggantian data diperlukan.');
+        }
+        respond(import_backup($request['importId'], session_id()));
+    }
     if ($path === '/api/services' && $method === 'GET') {
         respond(read_store()['services']);
     }
@@ -178,6 +201,8 @@ try {
         }
     }
     respond(['error' => 'Endpoint tidak ditemukan.'], 404);
+} catch (BackupConflictException $error) {
+    respond(['error' => $error->getMessage()], 409);
 } catch (InvalidArgumentException | JsonException $error) {
     respond(['error' => $error instanceof JsonException ? 'Format JSON tidak valid.' : $error->getMessage()], 400);
 } catch (Throwable $error) {

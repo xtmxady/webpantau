@@ -2,7 +2,7 @@
 
 Dashboard pribadi untuk mencatat masa aktif domain dan server, dengan login dan pengingat Telegram.
 
-**VPS kamu sudah memakai Nginx dan PHP 8.3: cukup pasang file aplikasi, atur Nginx, lalu buat akun. Tidak perlu Node.js, npm, Composer, atau database MySQL.**
+**Untuk VPS yang sudah memakai Nginx dan PHP 8.3: pasang file aplikasi, atur Nginx, lalu buat akun. Data disimpan dalam file JSON.**
 
 ## 1. Taruh file aplikasi di VPS
 
@@ -49,6 +49,8 @@ Jika site sudah aktif, cukup jalankan baris pemeriksaan dan reload. Pastikan DNS
 
 Buka domain Webpantau, buat nama pengguna dan kata sandi, lalu tambahkan domain/server kamu. Kontak klien bisa diisi dengan nomor WhatsApp, telepon, atau email pada formulir layanan; kolom ini opsional. Untuk layanan lama, klik edit lalu tambahkan kontaknya. Tidak ada akun bawaan. Selesaikan pendaftaran lewat akses privat sebelum membuka site ke publik. Jika site harus terbuka lebih dulu, gunakan `SETUP_KEY` sesuai [panduan teknis](docs/TECHNICAL.md).
 
+Biaya per siklus diisi **sebelum PPN**. Dashboard otomatis menampilkan PPN 11% dan total bayar untuk siklus bulanan atau tahunan. Rincian yang sama disertakan pada pengingat Telegram. PPN dibulatkan ke rupiah terdekat.
+
 Menu **Telegram** menyediakan kolom token bot dan chat ID. Kirim `/start` ke botmu, isi pengaturan di dashboard, lalu klik **Simpan pengaturan → Uji pengiriman**. PHP memerlukan ekstensi cURL untuk fitur Telegram; periksa dengan `php8.3 -m`. Jika cURL belum tersedia, pasang `php8.3-curl` dan restart PHP-FPM.
 
 ## 5. Aktifkan pengingat otomatis
@@ -67,8 +69,23 @@ Tambahkan satu baris ini di bawah jadwal yang sudah ada:
 
 Artinya: cek pengingat setiap jam pada menit ke-5. Pengingat tetap berjalan meskipun dashboard ditutup. Di menu Telegram, pilih hari pengingat dan aktifkan **Pengingat otomatis**.
 
+## Backup dan pindah VPS
+
+Buka menu **Backup & Import**, lalu unduh backup JSON. File ini berisi layanan, kontak klien, dan riwayat pengingat. Opsi menyertakan pengaturan Telegram termasuk token bot tidak dicentang secara bawaan; aktifkan jika ingin memindahkan pengaturan tersebut juga. Simpan file backup secara privat, terutama jika berisi token bot.
+
+Jika aplikasi sudah terpasang, perbarui blok `/api/backup/validate` Nginx sesuai [panduan teknis](docs/TECHNICAL.md#backup-dan-import) lalu periksa dan reload Nginx agar import di atas 32 KiB dapat diterima.
+
+Untuk pindah VPS:
+
+1. Pasang Webpantau di VPS baru dan buat akun. Akun, kata sandi, dan sesi login tidak ikut dalam backup.
+2. Buka **Backup & Import**, pilih file JSON (maksimal 5 MiB), lalu validasi.
+3. Periksa ringkasannya dan konfirmasikan penggantian data. Import **mengganti seluruh layanan dan riwayat pengingat** di VPS tujuan; akun yang sedang dipakai tetap sama.
+4. Jika backup menyertakan Telegram, pengaturannya dipulihkan dengan pengingat otomatis dalam keadaan nonaktif. Hentikan cron Webpantau di VPS lama sebelum mengaktifkan pengingat di VPS baru. Jika Telegram tidak disertakan, pengaturan Telegram di VPS tujuan tetap dipakai.
+
+Sebelum mengganti data, aplikasi menyimpan salinan pemulihan secara privat di `data/backups/`. File tersebut dapat diambil melalui SFTP lalu diimport kembali melalui dashboard. Salinan ini belum dihapus otomatis; kelola berkala. File tidak valid atau kegagalan menyimpan salinan pemulihan membatalkan penggantian data. Jika koneksi terputus saat import, muat ulang dashboard dan periksa hasilnya. Bila ada perubahan data setelah validasi, validasi file lagi sebelum melanjutkan.
+
 ## Preview dan informasi lainnya
 
 - [Preview HTML](preview/index.html): di GitHub pilih **Download raw file**, lalu buka file yang diunduh di browser; bisa mencoba menu dan formulir tanpa PHP. Menggunakan data contoh sementara, tidak menyimpan data dan tidak mengirim Telegram.
-- [Panduan teknis](docs/TECHNICAL.md): backup, reset password, migrasi, dan pengujian.
+- [Panduan teknis](docs/TECHNICAL.md): konfigurasi tambahan, backup, reset password, dan pengujian.
 - Folder `data/` berisi data pribadi dan token Telegram. Jangan upload folder ini ke GitHub.

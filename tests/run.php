@@ -39,13 +39,16 @@ $tests = [
     'Reminder sends once, follows renewed dates, and records only successful delivery' => function (): void {
         with_store(function (array &$store): void {
             $store['telegram'] = ['token' => 'test-token', 'chatId' => '123', 'enabled' => true, 'days' => [1, 0]];
-            $store['services'] = [['id' => 'test-service', 'name' => 'example.com', 'client' => 'Example', 'type' => 'domain', 'expires' => date('Y-m-d'), 'cost' => '150000']];
+            $store['services'] = [['id' => 'test-service', 'name' => 'example.com', 'client' => 'Example', 'type' => 'domain', 'expires' => date('Y-m-d'), 'cost' => '150000', 'cycle' => 'monthly']];
         }, true);
         $messages = [];
         $transport = function (array $cfg, string $text) use (&$messages): void { $messages[] = $text; };
         expect(run_reminders($transport) === 1, 'First reminder missing');
         expect(run_reminders($transport) === 0, 'Duplicate reminder sent');
         expect(str_contains($messages[0], 'Jatuh tempo hari ini'), 'Message date mismatch');
+        expect(str_contains($messages[0], 'Biaya / bulan: Rp 150.000'), 'Base cost missing');
+        expect(str_contains($messages[0], 'PPN 11%: Rp 16.500'), 'VAT calculation mismatch');
+        expect(str_contains($messages[0], 'Total bayar / bulan: Rp 166.500'), 'Tax-inclusive total mismatch');
         with_store(function (array &$store): void { $store['services'][0]['expires'] = date('Y-m-d', strtotime('+1 day')); }, true);
         $before = read_store()['sent'];
         try { run_reminders(static function (): void { throw new RuntimeException('Network failure'); }); } catch (RuntimeException) {}

@@ -1,6 +1,6 @@
 # Webpantau
 
-Dashboard pribadi untuk memantau jatuh tempo domain dan server/hosting, dengan login pemilik dan pengingat Telegram. **HTML + JavaScript biasa, CSS Tailwind yang sudah dikompilasi, PHP, dan JSON. Tidak membutuhkan Node.js, npm, Composer, atau build saat dipasang.**
+Dashboard pribadi untuk memantau jatuh tempo domain dan server/hosting, dengan login pemilik dan pengingat Telegram. Menggunakan **HTML, JavaScript, CSS Tailwind yang sudah dikompilasi, PHP, dan penyimpanan JSON**. File siap dipasang di VPS dengan Nginx dan PHP-FPM.
 
 ## Menjalankan secara lokal
 
@@ -12,20 +12,13 @@ php -S 127.0.0.1:3000 -t public public/router.php
 
 Buka aplikasi, buat akun pemilik pertama, kemudian catat domain/server. Kata sandi minimal 12 karakter. Pendaftaran tersedia hanya sampai satu akun dibuat. Gunakan akses privat atau `SETUP_KEY` sebelum membuka server ke publik. Server bawaan PHP hanya untuk pengembangan; VPS produksi menggunakan Nginx dan PHP-FPM.
 
-CSS Tailwind tersedia di `public/assets/app.css`, tanpa CDN. Penyesuaian tampilan tambahan dapat dilakukan di `public/assets/details.css`. Halaman menggunakan JavaScript browser biasa, bukan React.
+CSS Tailwind tersedia di `public/assets/app.css`, tanpa CDN. Penyesuaian tampilan tambahan dapat dilakukan di `public/assets/details.css`. Halaman menggunakan JavaScript browser biasa.
 
 ## VPS Ubuntu / Debian
 
-Contoh menggunakan Ubuntu 24.04, Nginx, dan PHP 8.3. Sesuaikan nama paket/socket bila distribusi VPS menyediakan versi PHP lain. Tidak ada perintah ini yang otomatis dijalankan pada VPS kamu.
+Ikuti [langkah pemasangan di README](../README.md) untuk VPS yang sudah memiliki Nginx dan PHP 8.3. PHP-FPM dan PHP CLI diperlukan, serta ekstensi cURL untuk Telegram. Cron menjalankan pengingat. Periksa versi dan socket sesuai VPS kamu; panduan ini tidak otomatis memasang aplikasi di VPS.
 
-```sh
-sudo apt update
-sudo apt install -y nginx php-fpm php-cli php-curl git cron
-sudo git clone https://github.com/xtmxady/webpantau.git /var/www/webpantau
-sudo install -d -m 700 -o www-data -g www-data /var/www/webpantau/data
-sudo find /var/www/webpantau/public /var/www/webpantau/app /var/www/webpantau/bin -type d -exec chmod 755 {} \;
-sudo find /var/www/webpantau/public /var/www/webpantau/app /var/www/webpantau/bin -type f -exec chmod 644 {} \;
-```
+Detail konfigurasi tambahan:
 
 1. Gunakan `deploy/nginx.conf` sebagai konfigurasi site; ganti domain, lokasi checkout, dan socket PHP-FPM. **Document root harus menunjuk ke `public/`, bukan direktori proyek.** Direktori `app/`, `bin/`, dan `data/` tidak boleh disajikan web server. Socket PHP dapat dicek melalui `ls /run/php/`.
 2. Aktifkan site, jalankan `sudo nginx -t`, lalu reload Nginx. Buat DNS domain menuju VPS dan pasang sertifikat HTTPS yang valid menggunakan alat yang tersedia di VPS.
@@ -36,19 +29,43 @@ sudo find /var/www/webpantau/public /var/www/webpantau/app /var/www/webpantau/bi
 
 Pemeriksaan setelah pemasangan: `/api/auth` mengembalikan JSON, login dapat dilakukan, layanan baru bertahan setelah halaman dimuat ulang, dan `/data/dashboard.json` serta `/app/bootstrap.php` mengembalikan 404. Hanya tombol uji dengan token nyata yang memvalidasi pengiriman Telegram.
 
+## Perhitungan biaya
+
+Field `cost` menyimpan biaya dasar sebelum pajak. PPN dihitung tetap 11%, dibulatkan ke rupiah terdekat, lalu ditambahkan ke biaya dasar untuk total bayar per siklus. Rincian tampil di formulir, tabel layanan, dan pesan pengingat Telegram. Backup mempertahankan biaya dasar; setelah import pajak dihitung kembali sehingga tidak ditambahkan dua kali.
+
 ## Penyimpanan, keamanan, dan pengingat
 
 - Data berada di `data/dashboard.json`, di luar document root dan diabaikan Git. `DATA_DIR` dapat mengubah lokasi; direktori di bawah `public/` ditolak. Jangan gunakan filesystem jaringan untuk JSON ini.
 - Penguncian `flock` menggunakan lock file terpisah dan penulisan atomik. Beberapa proses PHP-FPM pada **satu VPS** dapat menulis file yang sama. JSON cocok untuk penggunaan pribadi dengan data kecil; SQLite/PostgreSQL lebih cocok untuk aplikasi besar atau banyak server.
 - Kata sandi menggunakan `password_hash`/`password_verify`. Sesi PHP menggunakan cookie HttpOnly/SameSite, ID diregenerasi saat login, dan permintaan perubahan memerlukan token CSRF. Percobaan login dibatasi per IP selama 15 menit. Tidak ada akun/password default.
-- Token Telegram tidak dikembalikan ke browser setelah disimpan, tetapi **tersimpan sebagai teks di JSON** berizin 0600. Jaga server dan cadangan tetap privat. Kolom token kosong mempertahankan token lama. Tombol uji memakai konfigurasi yang sudah disimpan. Server memerlukan akses HTTPS ke `api.telegram.org`; verifikasi TLS tetap aktif.
+- Token Telegram tidak dikembalikan melalui menu pengaturan setelah disimpan, tetapi **tersimpan sebagai teks di JSON** berizin 0600. Token ikut diunduh hanya jika opsi Telegram dipilih saat backup. Jaga server dan cadangan tetap privat. Kolom token kosong mempertahankan token lama. Tombol uji memakai konfigurasi yang sudah disimpan. Server memerlukan akses HTTPS ke `api.telegram.org`; verifikasi TLS tetap aktif.
 - Cron memeriksa tanggal sesuai Asia/Makassar. Satu pesan per layanan/tanggal/hari pengingat; setelah perpanjangan, edit tanggal di dashboard. Hari pengingat yang terlewat saat cron tidak berjalan tidak dikirim ulang. Kegagalan sesudah Telegram menerima pesan tetapi sebelum pencatatan lokal selesai dapat menyebabkan pesan ganda saat retry.
 - Catatan tanggal diinput manual; aplikasi tidak mengambil informasi registrar atau membayar perpanjangan. Satu baris mencatat satu domain atau paket server, dengan nama klien bebas.
-- Cadangkan direktori data secara privat. Bila JSON rusak, aplikasi gagal dengan pesan kesalahan dan tidak mengosongkan file otomatis. Salinan konsisten dapat dibuat saat web server dan cron berhenti atau dengan mengambil shared lock `dashboard.lock` ketika menyalin JSON.
+- Bila JSON rusak, aplikasi gagal dengan pesan kesalahan dan tidak mengosongkan file otomatis. Untuk menyalin direktori data secara langsung, hentikan sementara akses tulis web server dan cron atau ambil shared lock `dashboard.lock` saat menyalin JSON.
 
-## Migrasi dari versi Node.js / reset kata sandi
+## Backup dan import
 
-Riwayat Git menyimpan versi Node.js sebelumnya. Data layanan, Telegram, dan riwayat pengingat tetap kompatibel, tetapi hash kata sandi versi Node.js perlu diganti. Cadangkan data sebelum migrasi, hentikan server lama, pasang versi PHP dengan `DATA_DIR` yang sama, lalu tetapkan password baru melalui CLI berikut. Perintah juga dapat dipakai jika lupa password. Akun tetap memakai nama pengguna lama, dan sesi lama tidak dapat digunakan setelah password diganti.
+Menu **Backup & Import** tersedia setelah login. Unduhan JSON berisi layanan (termasuk kontak klien) dan riwayat pengingat. Akun pemilik, hash kata sandi, serta sesi login tidak diekspor. Opsi menyertakan pengaturan Telegram tidak aktif secara bawaan; bila dicentang, file juga berisi token bot dan chat ID. Simpan unduhan secara privat.
+
+Untuk import, pilih file JSON dengan ukuran maksimal **5 MiB**, jalankan validasi, periksa ringkasan, lalu konfirmasikan penggantian. Backup dibatasi hingga **5.000 layanan dan 5.000 entri riwayat pengingat**. Import mengganti layanan dan riwayat pengingat secara keseluruhan; akun pemilik di VPS tujuan tetap dipertahankan. File yang tidak valid ditolak sebelum data diganti. Jika data tujuan berubah setelah validasi, pengguna harus memvalidasi ulang agar konfirmasi sesuai dengan data terbaru.
+
+Untuk VPS yang sudah terpasang, salin blok `location = /api/backup/validate` dari [deploy/nginx.conf](../deploy/nginx.conf) terbaru ke dalam blok `server` site Webpantau yang aktif, termasuk site HTTPS jika dipisah. Blok tersebut menetapkan `client_max_body_size 5m` khusus untuk validasi backup dan meneruskan permintaan ke `public/api.php`; sesuaikan socket PHP-FPM. Konfigurasi lama membatasi semua permintaan hingga 32 KiB, sehingga file lebih besar akan ditolak Nginx sebelum masuk ke aplikasi. Pertahankan domain, sertifikat, dan pengaturan site yang sudah ada, lalu jalankan:
+
+```sh
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+- Jika file tidak memuat Telegram, konfigurasi Telegram tujuan tetap dipertahankan.
+- Jika file memuat Telegram, pengaturan dan token dipulihkan, tetapi **pengingat otomatis dinonaktifkan**. Saat pindah VPS, hentikan cron Webpantau di VPS lama sebelum mengaktifkannya di VPS baru agar pengingat tidak dikirim dari dua server.
+- Buat akun pemilik di VPS baru sebelum import. Gunakan kata sandi yang kamu tentukan sendiri.
+
+Sebelum import mengganti data, aplikasi menyimpan backup pemulihan di `data/backups/` (atau `<DATA_DIR>/backups/` jika lokasi data diubah). Penyimpanan ini berada di luar document root. File tidak valid, validasi gagal, atau kegagalan menyimpan salinan pemulihan mencegah penggantian data. Jika respons jaringan terputus setelah penyimpanan berhasil, import mungkin sudah selesai; muat ulang dashboard dan periksa data sebelum mencoba lagi.
+
+Untuk memulihkan keadaan sebelum import, unduh file JSON pemulihan dari folder tersebut melalui SFTP, simpan secara privat, lalu gunakan menu **Backup & Import** seperti biasa. Akun tujuan tetap dipakai. Backup pemulihan dapat memuat token Telegram; jangan menaruhnya di `public/` atau Git. Belum ada pembersihan otomatis, sehingga pemilik perlu menghapus salinan lama secara berkala setelah memastikan backup yang diperlukan tersedia. Cadangan pada VPS yang sama membantu memulihkan salah import; simpan juga unduhan di tempat lain untuk menghadapi kehilangan VPS.
+
+## Reset kata sandi
+
+Jika lupa kata sandi, jalankan perintah berikut melalui SSH di VPS. Akun tetap memakai nama pengguna yang sama, dan sesi lama tidak dapat digunakan setelah kata sandi diganti.
 
 ```sh
 read -r -s -p 'Kata sandi baru (minimal 12 karakter): ' webpantau_password
@@ -62,9 +79,11 @@ Untuk `DATA_DIR` khusus, set variabel tersebut pada perintah CLI. Jangan memasuk
 
 ```sh
 php tests/run.php
+php tests/backup.php
 python3 tests/api.py
+python3 tests/backup_api.py
 ```
 
-Python hanya dipakai oleh tes integrasi, tidak dibutuhkan untuk menjalankan aplikasi. Unit tests mencakup batas tanggal, validasi input, penulisan gagal, korupsi data, pengingat berulang, dan pembaruan tanggal. Tes integrasi memeriksa login, CSRF, kunci pendaftaran, CRUD, proteksi token, pembatasan login, rute privat, dan 25 penulis PHP bersamaan. Keduanya memakai direktori sementara, tidak menyentuh data nyata. Jika PHP bukan pada PATH, gunakan `PHP_BIN=/path/to/php python3 tests/api.py`.
+Python hanya dipakai oleh tes integrasi, tidak dibutuhkan untuk menjalankan aplikasi. Unit tests mencakup batas tanggal, validasi input, penulisan gagal, korupsi data, pengingat berulang, dan pembaruan tanggal. Tes integrasi memeriksa login, CSRF, kunci pendaftaran, CRUD, proteksi token, pembatasan login, rute privat, dan 25 penulis PHP bersamaan. Tes backup memeriksa ekspor, validasi file, penggantian data, salinan pemulihan, dan pengaturan Telegram. Semua tes memakai direktori sementara, tidak menyentuh data nyata. Jika PHP bukan pada PATH, jalankan tes PHP dengan path lengkap dan gunakan `PHP_BIN=/path/to/php python3 tests/api.py` serta `PHP_BIN=/path/to/php python3 tests/backup_api.py`.
 
 Tampilan desktop dan mobile tersedia dalam `artifacts/`, menggunakan data contoh terpisah dari aplikasi asli.

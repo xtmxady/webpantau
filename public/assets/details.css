@@ -30,3 +30,31 @@ button:focus-visible, a:focus-visible { outline: 2px solid #176451; }
 .list-panel .overflow-x-auto { position: relative; }
 
 .service-contact { display: block; margin-top: 4px; color: #687563; max-width: 230px; white-space: normal; overflow-wrap: anywhere; }
+
+.backup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1050px; }
+.backup-grid .settings-panel { min-width: 0; }
+.backup-grid .toggle-row { align-items: flex-start; gap: 16px; }
+.backup-grid .toggle-row input { flex-shrink: 0; margin-top: 3px; }
+.backup-count { display: flex; align-items: baseline; gap: 10px; margin: 26px 0; }
+.backup-count strong { font-size: 30px; font-weight: 500; }
+.backup-count span { color: #7b8571; font-size: 12px; }
+.backup-note { color: #7b8571; font-size: 12px; line-height: 1.8; margin-top: 18px; }
+.backup-guide { grid-column: 1 / -1; }
+.backup-summary { margin: 20px 0; }
+.backup-summary div { display: flex; gap: 20px; justify-content: space-between; border-bottom: 1px solid #e4e7df; padding: 12px 0; font-size: 12px; }
+.backup-summary dt { color: #7b8571; flex-shrink: 0; }
+.backup-summary dd { text-align: right; overflow-wrap: anywhere; }
+.backup-warning { background: #f5f5e9; border: 1px solid #e5e4d3; padding: 14px; border-radius: 7px; font-size: 12px; line-height: 1.8; color: #746c43; }
+.backup-result { grid-column: 1 / -1; padding: 14px 18px; border-radius: 7px; background: #edf4e8; color: #176451; font-size: 12px; overflow-wrap: anywhere; }
+.backup-grid input[type=file] { font-size: 12px; padding: 12px; max-width: 100%; }
+.backup-grid input[type=file]::file-selector-button { margin-right: 10px; border: 0; padding: 8px 10px; border-radius: 5px; color: #176451; background: #edf4e8; cursor: pointer; }
+@media (max-width: 767px) { .backup-grid { grid-template-columns: 1fr; } }
+
+.cost-field-group { grid-column: 1 / -1; }
+.price-breakdown { margin: 0 0 20px; padding: 16px; border: 1px solid #dfe7d8; border-radius: 8px; background: #f0f4eb; }
+.price-breakdown > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-size: 12px; color: #718069; padding: 5px 0; }
+.price-breakdown strong { font-weight: 500; white-space: nowrap; color: #43583a; }
+.price-breakdown .price-total { border-top: 1px solid #d9e3d1; margin-top: 8px; padding-top: 12px; color: #176451; font-weight: 600; }
+.price-total strong { color: #176451; font-weight: 600; font-size: 16px; }
+.tax-line { display: block; margin-top: 4px; color: #818879; }
+.cycle-total { display: block; margin-top: 6px; font-size: 11px; color: #176451; font-weight: 600; }

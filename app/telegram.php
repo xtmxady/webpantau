@@ -63,8 +63,13 @@ function run_reminders(?callable $transport = null): int
                 }
                 $type = $service['type'] === 'domain' ? 'Domain' : 'Server';
                 $time = $days === 0 ? 'Jatuh tempo hari ini' : "Tersisa {$days} hari";
-                $cost = number_format((float) $service['cost'], 0, ',', '.');
-                $transport($store['telegram'], "🔔 {$type} {$service['name']}\nKlien: {$service['client']}\nJatuh tempo: {$service['expires']}\n{$time}\nBiaya: Rp {$cost}\nPerbarui tanggal di Webpantau setelah diperpanjang.");
+                $baseCost = (float) $service['cost'];
+                $taxAmount = round($baseCost * 0.11);
+                $cost = number_format($baseCost, 0, ',', '.');
+                $tax = number_format($taxAmount, 0, ',', '.');
+                $total = number_format($baseCost + $taxAmount, 0, ',', '.');
+                $cycle = ($service['cycle'] ?? 'yearly') === 'monthly' ? 'bulan' : 'tahun';
+                $transport($store['telegram'], "🔔 {$type} {$service['name']}\nKlien: {$service['client']}\nJatuh tempo: {$service['expires']}\n{$time}\nBiaya / {$cycle}: Rp {$cost}\nPPN 11%: Rp {$tax}\nTotal bayar / {$cycle}: Rp {$total}\nPerbarui tanggal di Webpantau setelah diperpanjang.");
                 $store['sent'][] = $key;
                 $store['sent'] = array_slice($store['sent'], -5000);
                 return true;
